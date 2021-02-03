@@ -1,0 +1,11 @@
+Metadata-Version: 1.2
+Name: rl-pytorch
+Version: 1.0
+Summary: Simple PPO implementation for pytorch
+Home-page: UNKNOWN
+Author: NVIDIA CORPORATION
+Author-email: 
+License: Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
+Description: UNKNOWN
+Platform: UNKNOWN
+Requires-Python: >=3.6
