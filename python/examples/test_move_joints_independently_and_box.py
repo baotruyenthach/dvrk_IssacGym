@@ -66,10 +66,10 @@ if sim_type is gymapi.SIM_FLEX:
     sim_params.flex.dynamic_friction = 0.7
     # sim_params.flex.static_friction = 100
     
-    sim_params.substeps = 4
+    sim_params.substeps = 5
     sim_params.flex.solver_type = 5
     sim_params.flex.num_outer_iterations = 6
-    sim_params.flex.num_inner_iterations = 50
+    sim_params.flex.num_inner_iterations = 40
     sim_params.flex.relaxation = 0.7
     sim_params.flex.warm_start = 0.1
 elif sim_type is gymapi.SIM_PHYSX:
@@ -137,10 +137,10 @@ soft_asset_file = "deformable_object_grasping/examples/rectangle/test_soft_body.
 soft_pose = gymapi.Transform()
 soft_pose.p = gymapi.Vec3(0, 0.395, 0.03)
 soft_pose.r = gymapi.Quat(0.0, 0.0, 0.707107, 0.707107)
-soft_thickness = 1    # important to add some thickness to the soft body to avoid interpenetrations
+soft_thickness = 0.05    # important to add some thickness to the soft body to avoid interpenetrations
 
 asset_options = gymapi.AssetOptions()
-asset_options.fix_base_link = True
+asset_options.fix_base_link = False
 asset_options.thickness = soft_thickness
 asset_options.disable_gravity = True
 asset_options.default_dof_drive_mode = gymapi.DOF_MODE_POS
@@ -160,7 +160,8 @@ for i in range(asset_soft_body_count):
 
 
 # create box asset
-box_size = 0.045
+box_size = 0.01
+asset_options = gymapi.AssetOptions()
 box_asset = gym.create_box(sim, box_size, box_size, box_size, asset_options)
 box_pose = gymapi.Transform()
 
@@ -222,18 +223,18 @@ for i in range(num_envs):
     # add kuka
     kuka_handle = gym.create_actor(env, kuka_asset, pose, "kuka", i, 1)
     
-    # # add box
-    # box_pose.p.x = 0.0
-    # box_pose.p.y = 0.4
-    # box_pose.p.z = 0.5 * box_size
-    # # box_pose.r = gymapi.Quat.from_axis_angle(gymapi.Vec3(0, 0, 1), np.random.uniform(-math.pi, math.pi))
-    # box_handle = gym.create_actor(env, box_asset, box_pose, "box", i, 0, segmentationId=1)
-    # color = gymapi.Vec3(np.random.uniform(0, 1), np.random.uniform(0, 1), np.random.uniform(0, 1))
-    # gym.set_rigid_body_color(env, box_handle, 0, gymapi.MESH_VISUAL_AND_COLLISION, color)   
+    # add box
+    box_pose.p.x = 0.0
+    box_pose.p.y = 0.4
+    box_pose.p.z = 0.5 * box_size
+    # box_pose.r = gymapi.Quat.from_axis_angle(gymapi.Vec3(0, 0, 1), np.random.uniform(-math.pi, math.pi))
+    box_handle = gym.create_actor(env, box_asset, box_pose, "box", i, 0, segmentationId=1)
+    color = gymapi.Vec3(np.random.uniform(0, 1), np.random.uniform(0, 1), np.random.uniform(0, 1))
+    gym.set_rigid_body_color(env, box_handle, 0, gymapi.MESH_VISUAL_AND_COLLISION, color)   
     
-    # add soft body + rail actor
-    soft_actor = gym.create_actor(env, soft_asset, soft_pose, "soft", i, 1)
-    soft_actors.append(soft_actor)
+    # # add soft body + rail actor
+    # soft_actor = gym.create_actor(env, soft_asset, soft_pose, "soft", i, 1)
+    # soft_actors.append(soft_actor)
 
     # # set soft material within a range of default
     # actor_default_soft_materials = gym.get_actor_soft_materials(env, soft_actor)
@@ -295,7 +296,7 @@ for i in range(num_envs):
     kuka_handles.append(kuka_handle)
 
 # Camera setup
-cam_pos = gymapi.Vec3(-0.5, 0.5, 1)
+cam_pos = gymapi.Vec3(0.5, 0.5, 1)
 cam_target = gymapi.Vec3(0.0, 0.0, 0.1)
 middle_env = envs[num_envs // 2 + num_per_row // 2]
 gym.viewer_camera_look_at(viewer, middle_env, cam_pos, cam_target)
@@ -432,12 +433,12 @@ while not gym.query_viewer_has_closed(viewer):
         gym.set_joint_target_position(envs[0], gym.get_joint_handle(envs[0], "kuka", "psm_tool_gripper1_joint"), 1.0)
         gym.set_joint_target_position(envs[0], gym.get_joint_handle(envs[0], "kuka", "psm_tool_gripper2_joint"), 1.0) 
     
-    elif t <= 10:
-        gym.set_joint_target_position(envs[0], gym.get_joint_handle(envs[0], "kuka", "psm_tool_gripper1_joint"), 0.5)
-        gym.set_joint_target_position(envs[0], gym.get_joint_handle(envs[0], "kuka", "psm_tool_gripper2_joint"), -0.2) 
+    elif t <= 11:
+        gym.set_joint_target_position(envs[0], gym.get_joint_handle(envs[0], "kuka", "psm_tool_gripper1_joint"), 0.4)
+        gym.set_joint_target_position(envs[0], gym.get_joint_handle(envs[0], "kuka", "psm_tool_gripper2_joint"), -0.3) 
 
     else:
-        gym.set_joint_target_position(envs[0], gym.get_joint_handle(envs[0], "kuka", "psm_main_insertion_joint"), 0.10)
+        gym.set_joint_target_position(envs[0], gym.get_joint_handle(envs[0], "kuka", "psm_main_insertion_joint"), 0.15)
 
 
     

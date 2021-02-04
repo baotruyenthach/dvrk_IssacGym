@@ -3,12 +3,12 @@
         <fem>
             <origin rpy="0.0 0.0 0.0" xyz="0 0 0" />
             <density value="100" />
-            <youngs value="2e5" />
+            <youngs value="1e4"/>
             <poissons value="0.3" />
             <damping value="0.0" />
             <attachDistance value="0.0" />
             <tetmesh filename="rectangle.tet" />
-            <scale value="0.6"/>
+            <scale value="1"/>
         </fem>
     </link>
 </robot>

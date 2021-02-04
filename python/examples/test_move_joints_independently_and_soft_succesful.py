@@ -66,10 +66,10 @@ if sim_type is gymapi.SIM_FLEX:
     sim_params.flex.dynamic_friction = 0.7
     # sim_params.flex.static_friction = 100
     
-    sim_params.substeps = 4
+    sim_params.substeps = 5
     sim_params.flex.solver_type = 5
     sim_params.flex.num_outer_iterations = 6
-    sim_params.flex.num_inner_iterations = 50
+    sim_params.flex.num_inner_iterations = 40
     sim_params.flex.relaxation = 0.7
     sim_params.flex.warm_start = 0.1
 elif sim_type is gymapi.SIM_PHYSX:
@@ -137,7 +137,7 @@ soft_asset_file = "deformable_object_grasping/examples/rectangle/test_soft_body.
 soft_pose = gymapi.Transform()
 soft_pose.p = gymapi.Vec3(0, 0.395, 0.03)
 soft_pose.r = gymapi.Quat(0.0, 0.0, 0.707107, 0.707107)
-soft_thickness = 1    # important to add some thickness to the soft body to avoid interpenetrations
+soft_thickness = 0.05    # important to add some thickness to the soft body to avoid interpenetrations
 
 asset_options = gymapi.AssetOptions()
 asset_options.fix_base_link = True
@@ -295,7 +295,7 @@ for i in range(num_envs):
     kuka_handles.append(kuka_handle)
 
 # Camera setup
-cam_pos = gymapi.Vec3(-0.5, 0.5, 1)
+cam_pos = gymapi.Vec3(0.5, 0.5, 1)
 cam_target = gymapi.Vec3(0.0, 0.0, 0.1)
 middle_env = envs[num_envs // 2 + num_per_row // 2]
 gym.viewer_camera_look_at(viewer, middle_env, cam_pos, cam_target)
@@ -432,7 +432,7 @@ while not gym.query_viewer_has_closed(viewer):
         gym.set_joint_target_position(envs[0], gym.get_joint_handle(envs[0], "kuka", "psm_tool_gripper1_joint"), 1.0)
         gym.set_joint_target_position(envs[0], gym.get_joint_handle(envs[0], "kuka", "psm_tool_gripper2_joint"), 1.0) 
     
-    elif t <= 10:
+    elif t <= 11:
         gym.set_joint_target_position(envs[0], gym.get_joint_handle(envs[0], "kuka", "psm_tool_gripper1_joint"), 0.5)
         gym.set_joint_target_position(envs[0], gym.get_joint_handle(envs[0], "kuka", "psm_tool_gripper2_joint"), -0.2) 
 
