@@ -862,18 +862,16 @@ class GraspDataCollectionClient:
 
 if __name__ == '__main__':
     dc_client = GraspDataCollectionClient()
-    #dataset_dir = '/mnt/tars_data/sim_dataset/BigBird/BigBird_mesh'
     dataset_name = 'BigBird'
-    #dataset_name = 'GraspDatabase'
     base_dir = '/home/mohanraj/sim_data/'
     dataset_dir = base_dir + dataset_name \
                     + '/' + dataset_name + '_mesh'
     object_mesh_dirs = os.listdir(dataset_dir)
+
     # Reverse object mesh directory list
     object_mesh_dirs = object_mesh_dirs[::-1]
     # print object_mesh_dirs
 
-    #object_mesh_dirs = ['pringles_bbq'] 
 
     # Bigbird objects that don't work for gazebo+dart.
     bigbird_objects_exclude = {'coca_cola_glass_bottle', 'softsoap_clear',
@@ -881,7 +879,7 @@ if __name__ == '__main__':
                                'palmolive_orange', 'palmolive_green', 'cinnamon_toast_crunch',
                                #'progresso_new_england_clam_chowder', 
                                'listerine_green', 'hersheys_bar', 'mahatma_rice'}
-    #exclude_object = 'windex'
+
     skip_object = True
     grasp_failure_retry_times = dc_client.num_grasps_per_object
     for i, object_name in enumerate(object_mesh_dirs):
@@ -909,9 +907,9 @@ if __name__ == '__main__':
             obj_mesh_path = dataset_dir + '/' + object_name + \
                             '/' + object_name + '_proc.stl' 
 
-        object_pose_array = [0., 0., 0., 0., -0.8, 0.59]
-        object_pose_stamped = dc_client.get_pose_stamped_from_array(object_pose_array) 
-        dc_client.update_gazebo_object_client(object_name, object_pose_array, object_model_name=object_name)
+        # Get object info:
+        gym.load_urdf()
+
 
         grasp_id = 0
         grasp_plan_failures_num = 0
@@ -927,15 +925,20 @@ if __name__ == '__main__':
 
             # Use the tsdf mesh for moveit, since the poission mesh doesn't work for moveit.
             #dc_client.set_up_object_name(object_name=object_name, object_mesh_path=object_poisson_mesh_path + '.stl')
+            
+            # Record object name and grasp id for record_grasp_data_client()
             dc_client.set_up_object_name(object_name=object_name, object_mesh_path=obj_mesh_path)
             dc_client.set_up_grasp_id(grasp_id)
 
+            # get random pose for the object and set pose
             object_pose_stamped = dc_client.gen_object_pose() 
             dc_client.move_gazebo_object_client(object_model_name=object_name, 
                                                 object_pose_stamped=object_pose_stamped)
             
             #Notice: if one object x doesn't have any grasp with valid plans, the next object y
             #is going to have the same object_id with x.
+            
+            # Segment scene to get point cloud of the object; generate preshapes
             object_found = dc_client.segment_and_generate_preshape()
             if not object_found:
                 grasp_plan_failures_num += 3 
@@ -943,9 +946,13 @@ if __name__ == '__main__':
 
             for i in xrange(len(dc_client.preshape_response.allegro_joint_state)):
                 dc_client.set_up_grasp_id(grasp_id)
+                
+                #Set up new pose for each object
                 if i > 0:
                     dc_client.move_gazebo_object_client(object_model_name=object_name, 
                                                         object_pose_stamped=object_pose_stamped)
+                # create_moveit_scene_client(), arm_moveit_planner_client(): find plan, 
+                # execute_arm_plan(): execute plan, lift_task_vel_planner_client(): lift plan
                 grasp_arm_plan = dc_client.grasp_and_lift_object_steps(object_pose_stamped, i)
                 if not grasp_arm_plan:
                     rospy.logerr('Can not find moveit plan to grasp. Ignore this grasp.\n')
@@ -957,9 +964,11 @@ if __name__ == '__main__':
                     #    rospy.loginfo('Reached the maximum retry times due to planning failures!')
                     #    grasp_id = dc_client.num_grasps_per_object
 
+                    # Return object back to original location
                     dc_client.place_object_steps(move_arm=grasp_arm_plan)
                     continue
                 
+                # Record both numerical data and visual data
                 dc_client.record_grasp_data_client(i)
                 grasp_id += 1
 

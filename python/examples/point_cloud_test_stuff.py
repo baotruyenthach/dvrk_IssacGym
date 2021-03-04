@@ -35,11 +35,21 @@ args = gymutil.parse_arguments(description="Depth Camera To Point Cloud Example"
 sim_params = gymapi.SimParams()
 sim_params.dt = 1.0 / 60.0
 if args.physics_engine == gymapi.SIM_FLEX:
+    sim_params.flex.deterministic_mode = True
+
+    # Set contact parameters
+    sim_params.flex.shape_collision_distance = 5e-4
+    sim_params.flex.contact_regularization = 1.0e-6
+    sim_params.flex.shape_collision_margin = 1.0e-4
+    sim_params.flex.dynamic_friction = 0.7
+    # sim_params.flex.static_friction = 100
+    
+    sim_params.substeps = 4
     sim_params.flex.solver_type = 5
-    sim_params.flex.num_outer_iterations = 4
-    sim_params.flex.num_inner_iterations = 15
-    sim_params.flex.relaxation = 0.75
-    sim_params.flex.warm_start = 0.4
+    sim_params.flex.num_outer_iterations = 6
+    sim_params.flex.num_inner_iterations = 100
+    sim_params.flex.relaxation = 0.7
+    sim_params.flex.warm_start = 0.1
 elif args.physics_engine == gymapi.SIM_PHYSX:
     sim_params.physx.solver_type = 1
     sim_params.physx.num_position_iterations = 4
@@ -87,14 +97,48 @@ load_options.armature = 0.01
 franka_asset_file = "urdf/franka_description/robots/franka_panda.urdf"
 franka_asset = gym.load_asset(sim, asset_root, franka_asset_file, load_options)
 
-# Load the Sektion cabinet
-load_options.flip_visual_attachments = False
-load_options.disable_gravity = False
+# Load the Sektion cabinet soft icosphere asset
+# asset_root = "./" # Current directory
+# soft_asset_file = "deformable_object_grasping/examples/rectangle/test_soft_body.urdf"
+
+# soft_pose = gymapi.Transform()
+# soft_pose.p = gymapi.Vec3(1, 0.03, 1)
+# # soft_pose.r = gymapi.Quat(0.0, 0.0, 0.707107, 0.707107)
+# soft_thickness = 0.005    # important to add some thickness to the soft body to avoid interpenetrations
+
+# asset_options = gymapi.AssetOptions()
+# asset_options.fix_base_link = True
+# asset_options.thickness = soft_thickness
+# asset_options.disable_gravity = True
+# # asset_options.default_dof_drive_mode = gymapi.DOF_MODE_POS
+
+# print("Loading asset '%s' from '%s'" % (soft_asset_file, asset_root))
+# soft_asset = gym.load_asset(sim, asset_root, soft_asset_file, asset_options)
+
 cabinet_asset_file = "urdf/sektion_cabinet_model/urdf/sektion_cabinet.urdf"
 cabinet_asset = gym.load_asset(sim, asset_root, cabinet_asset_file, load_options)
 
-envs = []
 
+# Create soft icosphere asset
+asset_root = "./" # Current directory
+soft_asset_file = "deformable_object_grasping/examples/rectangle/test_soft_body.urdf"
+
+soft_pose = gymapi.Transform()
+soft_pose.p = gymapi.Vec3(1, 0.03, 1)
+# soft_pose.r = gymapi.Quat(0.0, 0.0, 0.707107, 0.707107)
+soft_thickness = 0.005    # important to add some thickness to the soft body to avoid interpenetrations
+
+asset_options = gymapi.AssetOptions()
+asset_options.fix_base_link = True
+asset_options.thickness = soft_thickness
+asset_options.disable_gravity = True
+# asset_options.default_dof_drive_mode = gymapi.DOF_MODE_POS
+
+print("Loading asset '%s' from '%s'" % (soft_asset_file, asset_root))
+soft_asset = gym.load_asset(sim, asset_root, soft_asset_file, asset_options)
+
+envs = []
+soft_actors =[]
 
 for i in range(num_envs):
     # create environment
@@ -105,6 +149,10 @@ for i in range(num_envs):
     gym.create_actor(env, asset_sphere_low, gymapi.Transform(r=q, p=gymapi.Vec3(0.0, 0.25, 0.0)), 'box', i, 1, segmentationId=10)
     gym.create_actor(env, franka_asset, gymapi.Transform(r=q, p=gymapi.Vec3(2.0, 0.0, 0.0)), 'franka', i, 1, segmentationId=11)
     gym.create_actor(env, cabinet_asset, gymapi.Transform(r=q, p=gymapi.Vec3(0.0, 0.4, 2.0)), 'cab', i, 1, segmentationId=12)
+
+    # # add soft body + rail actor
+    # soft_actor = gym.create_actor(env, soft_asset, soft_pose, "soft", i, 1, segmentationId=13)
+    # soft_actors.append(soft_actor)
 
 # Camera properties
 cam_positions = []
@@ -212,13 +260,13 @@ while True:
                         points.append([p2[0, 2], p2[0, 0], p2[0, 1]])
                         color.append(c)
 
-        # # print("Hello:--------------------------", points)
-        # # use pptk to visualize the 3d point cloud created above
-        # v = pptk.viewer(points, color)
-        # v.color_map(color_map)
-        # # Sets a similar view to the gym viewer in the PPTK viewer
-        # v.set(lookat=[0, 0, 0], r=5, theta=0.4, phi=0.707)
-        # print("Point Cloud Complete")
+        # print("Hello:--------------------------", points)
+        # use pptk to visualize the 3d point cloud created above
+        v = pptk.viewer(points, color)
+        v.color_map(color_map)
+        # Sets a similar view to the gym viewer in the PPTK viewer
+        v.set(lookat=[0, 0, 0], r=5, theta=0.4, phi=0.707)
+        print("Point Cloud Complete")
 
         # # In headless mode, quit after the deprojection is complete
         # # The pptk viewer will remain valid until its window is closed

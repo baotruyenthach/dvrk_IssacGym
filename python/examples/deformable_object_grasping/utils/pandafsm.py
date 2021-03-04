@@ -656,6 +656,8 @@ class PandaFsm:
             self.mg = 9.81 * object_volume * self.density
             self.desired_force = self.FOS * 9.81 \
                 * object_volume * self.density / self.object_cof
+            print("desired force-----------------", self.desired_force)
+            # print("desired torque-----------------", self.torque_des)
             self.initial_desired_force = self.desired_force
 
             # If hand starts in contact with object, end test
@@ -1193,6 +1195,7 @@ class PandaFsm:
             self.gym_handle.apply_actor_dof_efforts(self.env_handle,
                                                     self.franka_handle,
                                                     self.torque_des)
+            print("desired torque-----------------", self.torque_des)                                        
             self.gym_handle.set_actor_dof_velocity_targets(
                 self.env_handle, self.franka_handle, self.vel_des)
 

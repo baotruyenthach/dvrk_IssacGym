@@ -87,7 +87,7 @@ load_options.fix_base_link = True
 load_options.flip_visual_attachments = True
 load_options.disable_gravity = True
 load_options.armature = 0.01
-franka_asset_file = "urdf/cube_2.urdf"
+franka_asset_file = "urdf/franka_description/robots/franka_panda.urdf"
 franka_asset = gym.load_asset(sim, asset_root, franka_asset_file, load_options)
 
 # Load the Sektion cabinet
@@ -107,7 +107,7 @@ for i in range(num_envs):
     # q = gymapi.Quat(0.30794364345911074,0.6158872869182215,0,0.7251576120166157)
     # Place 3 actors in the environment
     # gym.create_actor(env, asset_sphere_low, gymapi.Transform(r=q, p=gymapi.Vec3(0.0, 0.25, 0.0)), 'box', i, 1, segmentationId=10)
-    gym.create_actor(env, franka_asset, gymapi.Transform(p=gymapi.Vec3(0.0, 0.0, 0.3)), 'franka', i, 1, segmentationId=11)
+    gym.create_actor(env, franka_asset, gymapi.Transform(p=gymapi.Vec3(0.0, 0.0, 0.0)), 'franka', i, 1, segmentationId=11)
     # gym.create_actor(env, cabinet_asset, gymapi.Transform(r=q, p=gymapi.Vec3(2.0, 0.0, 0.0)), 'franka', i, 1, segmentationId=11)
 
 # Camera properties
@@ -214,11 +214,7 @@ while True:
                         p2 = X2*vinv  # Inverse camera view to get world coordinates
                         points.append([p2[0, 0], p2[0, 1], p2[0, 2]])
                         color.append(c)
-        print(points)
-        item = [x[2] for x in points]
-        print(max(item))
-        with open("stuff/point_cloud_box.txt", 'wb') as f:
-            pickle.dump(points, f)
+   
 
 
         
@@ -235,33 +231,34 @@ while True:
             break
         
         # Calculate bounding box:
-    #     obb = open3d.geometry.OrientedBoundingBox()
-    #     pcd = open3d.geometry.PointCloud()
-    #     pcd.points = open3d.utility.Vector3dVector(np.array(points))
-    #     obb = pcd.get_oriented_bounding_box()
+        obb = open3d.geometry.OrientedBoundingBox()
+        pcd = open3d.geometry.PointCloud()
+        pcd.points = open3d.utility.Vector3dVector(np.array(points))
+        obb = pcd.get_oriented_bounding_box()
+        print(obb.R)
 
-    #     points = np.asarray(obb.get_box_points())
-    #     lines = [
-    #         [0, 1],
-    #         [0, 2],
-    #         [0, 3],
-    #         [1, 6],
-    #         [1, 7],
-    #         [2, 5], 
-    #         [2, 7],
-    #         [3, 5],
-    #         [3, 6],
-    #         [4, 5],
-    #         [4, 6],
-    #         [4, 7],
-    #     ]
-    #     colors = [[1, 0, 0] for i in range(len(lines))]
-    #     line_set = open3d.geometry.LineSet(
-    #         points=open3d.utility.Vector3dVector(points),
-    #         lines=open3d.utility.Vector2iVector(lines),
-    #     )
-    #     line_set.colors = open3d.utility.Vector3dVector(colors)
-    #     open3d.visualization.draw_geometries([pcd, line_set])    
+        points = np.asarray(obb.get_box_points())
+        lines = [
+            [0, 1],
+            [0, 2],
+            [0, 3],
+            [1, 6],
+            [1, 7],
+            [2, 5], 
+            [2, 7],
+            [3, 5],
+            [3, 6],
+            [4, 5],
+            [4, 6],
+            [4, 7],
+        ]
+        colors = [[1, 0, 0] for i in range(len(lines))]
+        line_set = open3d.geometry.LineSet(
+            points=open3d.utility.Vector3dVector(points),
+            lines=open3d.utility.Vector2iVector(lines),
+        )
+        line_set.colors = open3d.utility.Vector3dVector(colors)
+        open3d.visualization.draw_geometries([pcd, line_set])    
 
     frame_count = frame_count + 1
 
